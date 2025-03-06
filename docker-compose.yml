@@ -10,8 +10,8 @@ services:
       - FLASK_ENV=development
       - FLASK_DEBUG=1
       - FLASK_PORT=5001
-      - MONGO_DBNAME=translatego_db
-      - MONGO_URI=mongodb://admin:secret@mongodb:27017/translatego_db
+      - MONGO_DBNAME=${MONGO_DBNAME}
+      - MONGO_URI=${MONGO_URI}
       # The following API keys will be provided by the .env file
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     env_file:
@@ -29,7 +29,7 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=secret
       - MONGO_INITDB_DATABASE=translatego_db
     ports:
-      - "27017:27017"
+      - "27018:27017"
     volumes:
       - mongodb-data:/data/db
     restart: unless-stopped

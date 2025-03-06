@@ -1,6 +1,5 @@
 import os
 import json
-import re
 from openai import OpenAI
 
 # Language codes and names
