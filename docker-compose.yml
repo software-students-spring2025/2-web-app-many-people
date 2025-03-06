@@ -1,0 +1,38 @@
+version: "3"
+
+services:
+  translatego:
+    build: .
+    ports:
+      - "5001:5001"
+    environment:
+      - FLASK_APP=app
+      - FLASK_ENV=development
+      - FLASK_DEBUG=1
+      - FLASK_PORT=5001
+      - MONGO_DBNAME=${MONGO_DBNAME}
+      - MONGO_URI=${MONGO_URI}
+      # The following API keys will be provided by the .env file
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+    depends_on:
+      - mongodb
+    restart: unless-stopped
+
+  mongodb:
+    image: mongo:latest
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+      - MONGO_INITDB_DATABASE=translatego_db
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb-data:/data/db
+    restart: unless-stopped
+
+volumes:
+  mongodb-data: 

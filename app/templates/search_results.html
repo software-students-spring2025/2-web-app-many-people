@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - TranslateGo{% endblock %}
+
+{% block content %}
+<div class="search-results-container">
+    <div class="search-header">
+        <h2>Search Results for "{{ query }}"</h2>
+        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back
+        </a>
+    </div>
+    
+    {% if history_items %}
+    <div class="history-items-list">
+        {% for item in history_items %}
+        <div class="history-item">
+            <div class="history-item-header">
+                <div class="item-meta">
+                    <span class="item-type-badge {% if item.type == 'lookup' %}lookup-badge{% else %}translate-badge{% endif %}">
+                        {% if item.type == 'lookup' %}Lookup{% else %}Translation{% endif %}
+                    </span>
+                    <span class="item-language">{{ languages.get(item.target_language, item.target_language) }}</span>
+                    <span class="item-date">{{ item.created_at.strftime('%b %d, %Y %H:%M') }}</span>
+                </div>
+                <div class="item-actions">
+                    <form action="{{ url_for('main.save_translation') }}" method="POST">
+                        <input type="hidden" name="text" value="{{ item.get('word', item.get('text', '')) }}">
+                        <input type="hidden" name="translation" value="{{ item.result.translation if item.result and item.result.translation else '' }}">
+                        <input type="hidden" name="target_language" value="{{ item.target_language }}">
+                        <input type="hidden" name="type" value="{{ item.type }}">
+                        <button type="submit" class="btn btn-sm btn-save">
+                            <i class="fas fa-bookmark"></i> Save
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="history-item-content">
+                <div class="original-text">
+                    <h4>Original</h4>
+                    <p>{{ item.get('word', item.get('text', '')) }}</p>
+                </div>
+                <div class="translation-text">
+                    <h4>Translation</h4>
+                    <p>
+                        {% if item.result and item.result.translation %}
+                            {{ item.result.translation }}
+                        {% else %}
+                            <em>No translation available</em>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-results">
+        <div class="empty-icon">
+            <i class="fas fa-search"></i>
+        </div>
+        <p>No results found for "{{ query }}".</p>
+        <p>Try searching for a different term.</p>
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Translate - TranslateGo{% endblock %}
+
+{% block content %}
+<div class="translate-container">
+    <div class="translate-box">
+        <h2>Translate Text</h2>
+        <form method="POST" action="{{ url_for('main.translate') }}" id="translate-form">
+            <div class="form-group">
+                <textarea class="form-control text-input" id="text" name="text" rows="6" placeholder="Enter text to translate" required>{{ request.form.get('text', '') }}</textarea>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target_language">Target Language:</label>
+                    <select id="target_language" name="target_language" class="form-control">
+                        {% for code, name in languages.items() %}
+                        <option value="{{ code }}" {% if code == current_language %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="topic">Topic:</label>
+                    <select id="topic" name="topic" class="form-control">
+                        <option value="" {% if not current_topic %}selected{% endif %}>General</option>
+                        <option value="finance" {% if current_topic == 'finance' %}selected{% endif %}>Business</option>
+                        <option value="technology" {% if current_topic == 'technology' %}selected{% endif %}>Technology</option>
+                        <option value="medical" {% if current_topic == 'medical' %}selected{% endif %}>Medical</option>
+                        <option value="legal" {% if current_topic == 'legal' %}selected{% endif %}>Legal</option>
+                        <option value="academic" {% if current_topic == 'academic' %}selected{% endif %}>Academic</option>
+                        <option value="sports" {% if current_topic == 'sports' %}selected{% endif %}>Sports</option>
+                        <option value="art" {% if current_topic == 'art' %}selected{% endif %}>Art</option>
+                        <option value="science" {% if current_topic == 'science' %}selected{% endif %}>Science</option>
+                        <option value="travel" {% if current_topic == 'travel' %}selected{% endif %}>Travel</option>
+                        <option value="food" {% if current_topic == 'food' %}selected{% endif %}>Food</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-translate">Translate</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading animation -->
+    <div class="loading-container" id="loading-animation" style="display: none;">
+        <div class="spinner"></div>
+        <p>Translating, please wait...</p>
+    </div>
+
+    {% if result %}
+    <div class="result-container">
+        <div class="result-header">
+            <h3>Translation</h3>
+            <form action="{{ url_for('main.save_translation') }}" method="POST">
+                <input type="hidden" name="text" value="{{ request.form.get('text') }}">
+                <input type="hidden" name="translation" value="{{ result.translation }}">
+                <input type="hidden" name="target_language" value="{{ result.target_language }}">
+                <input type="hidden" name="type" value="translate">
+                <input type="hidden" name="topic" value="{{ current_topic }}">
+                <button type="submit" class="btn btn-sm btn-save">
+                    <i class="fas fa-bookmark"></i> Save
+                </button>
+            </form>
+        </div>
+        
+        <div class="translation-box">
+            <div class="translation-content">
+                <p class="translation-text">{{ result.translation }}</p>
+            </div>
+            <div class="translation-actions">
+                <button class="btn btn-sm btn-copy" onclick="copyTranslation()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show loading animation when form is submitted
+    document.addEventListener('DOMContentLoaded', function() {
+        const translateForm = document.getElementById('translate-form');
+        const loadingAnimation = document.getElementById('loading-animation');
+        
+        if (translateForm) {
+            translateForm.addEventListener('submit', function() {
+                loadingAnimation.style.display = 'flex';
+            });
+        }
+    });
+
+    function copyTranslation() {
+        // Get the text from the translation
+        const translationEl = document.querySelector('.translation-text');
+        const text = translationEl.textContent;
+        
+        // Create a temporary textarea element to copy from
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        // Show a temporary message
+        const copyBtn = document.querySelector('.btn-copy');
+        const originalText = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+        setTimeout(() => {
+            copyBtn.innerHTML = originalText;
+        }, 2000);
+    }
+</script>
+{% endblock %} 

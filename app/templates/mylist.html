@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+
+{% block title %}My List - TranslateGo{% endblock %}
+
+{% block content %}
+<div class="mylist-container">
+    <h2>My Saved Translations</h2>
+    
+    {% if saved_items %}
+    <div class="saved-items-list">
+        {% for item in saved_items %}
+        <div class="saved-item" id="item-{{ item._id }}">
+            <div class="saved-item-header">
+                <div class="item-meta">
+                    <span class="item-type-badge {% if item.type == 'lookup' %}lookup-badge{% else %}translate-badge{% endif %}">
+                        {% if item.type == 'lookup' %}Lookup{% else %}Translation{% endif %}
+                    </span>
+                    <span class="item-language">{{ languages.get(item.target_language, item.target_language) }}</span>
+                    <span class="item-date">{{ item.created_at.strftime('%b %d, %Y') }}</span>
+                </div>
+                <div class="item-actions">
+                    <form action="{{ url_for('main.delete_saved', item_id=item._id) }}" method="POST" class="delete-form">
+                        <button type="submit" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="saved-item-content">
+                <div class="original-text">
+                    <h4>Original</h4>
+                    <p>{{ item.text }}</p>
+                </div>
+                <div class="translation-text">
+                    <h4>Translation</h4>
+                    <p>{{ item.translation }}</p>
+                </div>
+            </div>
+            
+            <div class="saved-item-notes">
+                <h4>Notes</h4>
+                <form action="{{ url_for('main.edit_note', item_id=item._id) }}" method="POST" class="notes-form">
+                    <div class="input-group">
+                        <textarea class="form-control" name="note" rows="2" placeholder="Add notes about this translation">{{ item.notes }}</textarea>
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="submit">
+                                <i class="fas fa-save"></i> Save
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-list">
+        <div class="empty-icon">
+            <i class="fas fa-list-alt"></i>
+        </div>
+        <p>You haven't saved any translations yet.</p>
+        <p>Use the "Save" button when looking up words or translating text to add them to your list.</p>
+        <a href="{{ url_for('main.lookup') }}" class="btn btn-primary">Start Translating</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enable inline editing of notes
+    document.addEventListener('DOMContentLoaded', function() {
+        const textareas = document.querySelectorAll('.notes-form textarea');
+        
+        textareas.forEach(textarea => {
+            // Auto-resize textarea on input
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+            
+            // Initial sizing
+            textarea.style.height = 'auto';
+            textarea.style.height = (textarea.scrollHeight) + 'px';
+        });
+    });
+</script>
+{% endblock %} 

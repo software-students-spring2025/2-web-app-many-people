@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Login - TranslateGo{% endblock %}
+
+{% block header %}
+<header class="auth-header">
+    <h1 class="logo">TranslateGo</h1>
+</header>
+{% endblock %}
+
+{% block content %}
+<div class="auth-container">
+    <div class="auth-box">
+        <h2>Login</h2>
+        <form method="POST" action="{{ url_for('auth.login') }}">
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" class="form-control" id="email" name="email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" class="form-control" id="password" name="password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn btn-primary btn-block">Login</button>
+            </div>
+        </form>
+        <div class="auth-links">
+            <p>Don't have an account? <a href="{{ url_for('auth.signup') }}">Sign up</a></p>
+        </div>
+    </div>
+</div>
+{% endblock %} 

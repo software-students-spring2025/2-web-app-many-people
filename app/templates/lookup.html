@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}Lookup - TranslateGo{% endblock %}
+
+{% block content %}
+<div class="lookup-container">
+    <div class="lookup-box">
+        <h2>Look Up Word or Phrase</h2>
+        <form method="POST" action="{{ url_for('main.lookup') }}" id="lookup-form">
+            <div class="form-group">
+                <input type="text" class="form-control word-input" id="word" name="word" placeholder="Enter a word or short phrase" required>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="target_language">Target Language:</label>
+                    <select id="target_language" name="target_language" class="form-control">
+                        {% for code, name in languages.items() %}
+                        <option value="{{ code }}" {% if code == current_language %}selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="topic">Topic:</label>
+                    <select id="topic" name="topic" class="form-control">
+                        <option value="" {% if not current_topic %}selected{% endif %}>General</option>
+                        <option value="finance" {% if current_topic == 'finance' %}selected{% endif %}>Finance</option>
+                        <option value="technology" {% if current_topic == 'technology' %}selected{% endif %}>Technology</option>
+                        <option value="medical" {% if current_topic == 'medical' %}selected{% endif %}>Medical</option>
+                        <option value="legal" {% if current_topic == 'legal' %}selected{% endif %}>Legal</option>
+                        <option value="academic" {% if current_topic == 'academic' %}selected{% endif %}>Academic</option>
+                        <option value="sports" {% if current_topic == 'sports' %}selected{% endif %}>Sports</option>
+                        <option value="art" {% if current_topic == 'art' %}selected{% endif %}>Art</option>
+                        <option value="science" {% if current_topic == 'science' %}selected{% endif %}>Science</option>
+                        <option value="travel" {% if current_topic == 'travel' %}selected{% endif %}>Travel</option>
+                        <option value="food" {% if current_topic == 'food' %}selected{% endif %}>Food</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-lookup">Look Up</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading animation -->
+    <div class="loading-container" id="loading-animation" style="display: none;">
+        <div class="spinner"></div>
+        <p>Looking up translation...</p>
+    </div>
+
+    {% if result %}
+    <div class="result-container">
+        <div class="result-header">
+            <h3>Results for "{{ request.form.get('word') }}"</h3>
+            <form action="{{ url_for('main.save_translation') }}" method="POST">
+                <input type="hidden" name="text" value="{{ request.form.get('word') }}">
+                <input type="hidden" name="translation" value="{{ result.formatted_text if result.formatted_text is defined else result.translation }}">
+                <input type="hidden" name="target_language" value="{{ result.target_language }}">
+                <input type="hidden" name="type" value="lookup">
+                <input type="hidden" name="topic" value="{{ current_topic }}">
+                <button type="submit" class="btn btn-sm btn-save">
+                    <i class="fas fa-bookmark"></i> Save
+                </button>
+            </form>
+        </div>
+        
+        <div class="translation-box">
+            <div class="detailed-translation">
+                {% if result.translation_data and result.translation_data.translations %}
+                    <!-- Structured data display -->
+                    {% for trans in result.translation_data.translations %}
+                    <div class="translation-entry {% if trans.is_specialized_term %}specialized-term{% endif %}">
+                        <div class="translation-header">
+                            <span class="word">{{ trans.word }}</span>
+                            {% if trans.phonetic is defined and trans.phonetic and result.target_language != 'zh' %}
+                            <span class="phonetic">· {{ trans.phonetic }}</span>
+                            {% endif %}
+                            
+                            {% if trans.is_specialized_term and trans.topic %}
+                            <div class="topic-tag">{{ trans.topic }} terminology</div>
+                            {% endif %}
+                        </div>
+                        <div class="part-of-speech-line">
+                            <span class="part-of-speech">[{{ trans.partOfSpeech }}]</span>
+                            <span class="meaning">{{ trans.meaning }}</span>
+                        </div>
+                        {% if trans.context %}
+                        <div class="context-line">
+                            <span class="context">- {{ trans.context }}</span>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Word forms section for English translations -->
+                        {% if trans.wordForms is defined and trans.wordForms %}
+                        <div class="word-forms-section">
+                            <ul class="word-forms-list">
+                                {% if trans.wordForms.pluralForm %}
+                                <li><span class="form-label">plural:</span> <span class="form-value">{{ trans.wordForms.pluralForm }}</span></li>
+                                {% endif %}
+                                {% if trans.wordForms.pastTense %}
+                                <li><span class="form-label">past tense:</span> <span class="form-value">{{ trans.wordForms.pastTense }}</span></li>
+                                {% endif %}
+                                {% if trans.wordForms.presentParticiple %}
+                                <li><span class="form-label">present participle:</span> <span class="form-value">{{ trans.wordForms.presentParticiple }}</span></li>
+                                {% endif %}
+                                {% if trans.wordForms.comparativeForm %}
+                                <li><span class="form-label">comparative:</span> <span class="form-value">{{ trans.wordForms.comparativeForm }}</span></li>
+                                {% endif %}
+                                {% if trans.wordForms.superlativeForm %}
+                                <li><span class="form-label">superlative:</span> <span class="form-value">{{ trans.wordForms.superlativeForm }}</span></li>
+                                {% endif %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Synonyms section for English translations -->
+                        {% if trans.synonyms is defined and trans.synonyms %}
+                        <div class="synonyms-section">
+                            <span class="synonyms-label">Synonyms:</span>
+                            <div class="synonyms-tags">
+                                {% for synonym in trans.synonyms %}
+                                <span class="synonym-tag">{{ synonym }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        {% if trans.examples %}
+                        <div class="examples-section">
+                            <p class="examples-header">Examples:</p>
+                            <ul class="examples-list">
+                                {% for example in trans.examples %}
+                                <li>
+                                    <span class="original">{{ example.original }}</span>
+                                    {% if result.source_language != result.target_language and example.translated and example.original != example.translated %}
+                                    <span class="translated">({{ example.translated }})</span>
+                                    {% endif %}
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endfor %}
+                {% elif result.formatted_text is defined %}
+                    <!-- Display pre-formatted text -->
+                    <div class="formatted-translation">
+                        {{ result.formatted_text | safe | nl2br }}
+                    </div>
+                {% else %}
+                    <!-- Fallback for plain text -->
+                    <div class="formatted-translation">
+                        {{ result.translation | safe | nl2br }}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show loading animation when form is submitted
+    document.addEventListener('DOMContentLoaded', function() {
+        const lookupForm = document.getElementById('lookup-form');
+        const loadingAnimation = document.getElementById('loading-animation');
+        
+        if (lookupForm) {
+            lookupForm.addEventListener('submit', function() {
+                loadingAnimation.style.display = 'flex';
+            });
+        }
+    });
+</script>
+{% endblock %} 
